@@ -11,6 +11,9 @@ public class InMemoryProviderRegistry implements ProviderRegistry {
 
     @Override
     public Optional<Provider> findById(String providerId) {
+        if (providerId == null) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(providers.get().get(providerId));
     }
 

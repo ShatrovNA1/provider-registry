@@ -27,4 +27,11 @@ class InMemoryProviderRegistryTest {
                 new Provider("duplicate", "https://two.test", "2"))));
         assertEquals(List.of(existing), registry.findAll());
     }
+
+    @Test
+    void nullIdYieldsEmptyOptional() {
+        InMemoryProviderRegistry registry = new InMemoryProviderRegistry();
+        registry.replaceAll(List.of(new Provider("a", "https://a.test", "k")));
+        assertTrue(registry.findById(null).isEmpty());
+    }
 }

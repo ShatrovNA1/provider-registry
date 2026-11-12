@@ -3,8 +3,11 @@ package ru.example.providerregistry.client;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import ru.example.providerregistry.model.Provider;
 import ru.example.providerregistry.registry.InMemoryProviderRegistry;
@@ -44,5 +47,40 @@ class SubscriberAvailabilityServiceTest {
 
         assertFalse(service.isAvailable("provider-1", "700000000000"));
         server.verify();
+    }
+
+    @Test
+    void returnsFalseWhen200BodyIsNotOk() {
+        server.expect(requestTo("https://provider.test/subscribers/700000000000"))
+                .andRespond(withSuccess("{\"status\":\"blocked\"}", MediaType.APPLICATION_JSON));
+
+        assertFalse(service.isAvailable("provider-1", "700000000000"));
+    }
+
+    @Test
+    void propagatesOtherHttpErrors() {
+        server.expect(requestTo("https://provider.test/subscribers/700000000000"))
+                .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        assertThrows(HttpServerErrorException.class,
+                () -> service.isAvailable("provider-1", "700000000000"));
+        server.verify();
+    }
+
+    @Test
+    void propagatesNetworkErrors() {
+        server.expect(requestTo("https://provider.test/subscribers/700000000000"))
+                .andRespond(withException(new java.io.IOException("connection refused")));
+
+        assertThrows(ResourceAccessException.class,
+                () -> service.isAvailable("provider-1", "700000000000"));
+        server.verify();
+    }
+
+    @Test
+    void unknownProviderThrows() {
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> service.isAvailable("no-such-provider", "700000000000"));
+        assertTrue(e.getMessage().contains("no-such-provider"));
     }
 }
