@@ -1,0 +1,12 @@
+[
+  {
+    "id": "provider-a",
+    "baseUrl": "https://api.provider-a.example",
+    "apiKey": "replace-me"
+  },
+  {
+    "id": "provider-b",
+    "baseUrl": "https://api.provider-b.example",
+    "apiKey": "replace-me-too"
+  }
+]
